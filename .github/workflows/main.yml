@@ -2,44 +2,32 @@ name: Run SAT Scanner
 
 on:
   schedule:
-    - cron: '0 */2 * * *'   # runs every 2 hours
-  workflow_dispatch:        # allows manual trigger
+    # Daily post-market SAT scan (15:45 IST ≈ 10:15 UTC), Mon–Fri
+    - cron: '15 10 * * 1-5'
+    # Mid-week near-breakout logging (Wednesday 16:30 IST ≈ 11:00 UTC)
+    - cron: '0 11 * * 3'
+  workflow_dispatch:  # manual trigger if needed
 
 jobs:
-  run-scanner:
+  run-script:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      # 2️⃣ Setup Python
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
 
-      # 3️⃣ Install dependencies
-      - name: Install dependencies
-        run: |
-          pip install pandas requests yfinance python-telegram-bot
+    - name: Install dependencies
+      run: |
+        pip install pandas requests yfinance python-telegram-bot
 
-      # 4️⃣ Run scanner
-      - name: Run SAT Scanner
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          python scanner.py
-
-      # 5️⃣ Commit and push near-breakout CSV
-      - name: Commit near-breakout CSV
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          if [ -f near_breakout.csv ]; then
-            git add near_breakout.csv
-            git commit -m "Update near_breakout.csv from GitHub Actions" || echo "No changes to commit"
-            git push origin main
-          fi
+    - name: Run SAT Scanner
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: |
+        python scanner.py --max-symbols 200  # scans all symbols
