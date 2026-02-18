@@ -3,9 +3,6 @@ import os
 print("TOKEN:", os.getenv("TELEGRAM_TOKEN"))
 print("CHAT:", os.getenv("CHAT_ID"))
 
-from telegram_alerts import send_telegram_message
-
-send_telegram_message("TEST MESSAGE FROM GITHUB ACTION – ASTIKAR")
 
 import yfinance as yf
 import pandas as pd
