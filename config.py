@@ -1,19 +1,24 @@
-"""Configuration and symbol universe utilities for Nifty 200 scanning."""
+"""
+Configuration and symbol universe utilities for Nifty 200 scanning.
+"""
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import List
 
 import pandas as pd
 
 # ==============================
-# TELEGRAM CONFIGURATION
+# TELEGRAM CONFIGURATION (FROM ENV VARIABLES)
 # ==============================
 
-# ⚠️ Replace with your real values
-TELEGRAM_BOT_TOKEN = "8475371828:AAF-0lNPHii6TvMziJal0eLAKML92BJ32rg"
-TELEGRAM_CHAT_ID = "8144938221"
+# These will be read from Render Environment Variables
+# Do NOT hardcode token or chat ID here
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("CHAT_ID")
 
 # ==============================
 # NIFTY 200 CONFIGURATION
@@ -47,7 +52,12 @@ def load_nifty200_symbols() -> List[str]:
     """Load Nifty 200 constituent symbols from NSE index CSV, with safe fallback."""
     try:
         table = pd.read_csv(NIFTY200_CSV_URL)
-        symbol_col = next((c for c in table.columns if c.strip().lower() == "symbol"), None)
+
+        symbol_col = next(
+            (c for c in table.columns if c.strip().lower() == "symbol"),
+            None
+        )
+
         if not symbol_col:
             raise ValueError("symbol column not found")
 
@@ -60,6 +70,8 @@ def load_nifty200_symbols() -> List[str]:
             .unique()
             .tolist()
         )
+
         return symbols or FALLBACK_SYMBOLS
+
     except Exception:
         return FALLBACK_SYMBOLS
