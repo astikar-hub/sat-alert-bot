@@ -1,8 +1,8 @@
-name: Run Scanner
+name: Daily SAT Alert
 
 on:
   schedule:
-    - cron: '0 */2 * * *'
+    - cron: "10 10 * * 1-5"   # 3:40 PM IST (Mon-Fri)
   workflow_dispatch:
 
 jobs:
@@ -10,18 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: |
-        pip install pandas requests yfinance python-telegram-bot
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
-    - name: Run scanner
-      run: |
-        python scanner.py
+      - name: Run scanner
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          python scanner.py
