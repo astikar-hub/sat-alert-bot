@@ -17,8 +17,11 @@ import pandas as pd
 # These will be read from Render Environment Variables
 # Do NOT hardcode token or chat ID here
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("CHAT_ID")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+    raise ValueError("Telegram credentials are missing. Check environment variables.")
 
 # ==============================
 # NIFTY 200 CONFIGURATION
