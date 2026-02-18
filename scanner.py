@@ -1,3 +1,7 @@
+from telegram_alerts import send_telegram_message
+
+send_telegram_message("TEST MESSAGE FROM GITHUB ACTION – ASTIKAR")
+
 import yfinance as yf
 import pandas as pd
 import argparse
