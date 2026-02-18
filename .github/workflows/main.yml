@@ -1,52 +1,54 @@
 name: Run SAT Scanner
 
-# Trigger schedule
 on:
   schedule:
-    # Daily run after market close (every weekday at 18:30 UTC ~ 00:00 IST)
-    - cron: '30 18 * * 1-5'
-    # Mid-week run (Wednesday 18:30 UTC ~ 00:00 IST Thursday)
-    - cron: '30 18 * * 3'
-  workflow_dispatch: # Manual trigger
+    # Daily scan after market close (e.g., 6:15 PM IST)
+    - cron: '45 12 * * 1-5'   # UTC time: 12:45 PM = 6:15 PM IST, Mon-Fri
+    # Mid-week scan (Wednesday)
+    - cron: '45 12 * * 3'     # UTC: Wednesday 12:45 PM = 6:15 PM IST
+  workflow_dispatch:
 
 jobs:
   run-scanner:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      # Step 2: Setup Python
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install pandas requests yfinance python-telegram-bot
+    - name: Install dependencies
+      run: |
+        pip install pandas requests yfinance python-telegram-bot
 
-      # Step 4: Determine scan type
-      - name: Set SCAN_TYPE for run
-        id: scan_type
-        run: |
-          DAY_OF_WEEK=$(date +%u)  # 1=Mon ... 7=Sun
-          if [ "$DAY_OF_WEEK" -eq 3 ]; then
-            echo "SCAN_TYPE=midweek" >> $GITHUB_ENV
-          else
-            echo "SCAN_TYPE=daily" >> $GITHUB_ENV
-          fi
+    - name: Determine scan type
+      id: scan_type
+      run: |
+        DAY_OF_WEEK=$(date +%u)
+        if [ "$DAY_OF_WEEK" -eq 3 ]; then
+          echo "SCAN_TYPE=midweek" >> $GITHUB_ENV
+        else
+          echo "SCAN_TYPE=daily" >> $GITHUB_ENV
+        fi
 
-      # Step 5: Run scanner
-      - name: Run SAT scanner
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SCAN_TYPE: ${{ env.SCAN_TYPE }}
-        run: |
-          python scanner.py --max-symbols 200
+    - name: Run scanner
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        SCAN_TYPE: ${{ env.SCAN_TYPE }}
+      run: |
+        python scanner.py --max-symbols 200
+
+    # Push near_breakout.csv back to GitHub only for midweek runs
+    - name: Commit and push near_breakout.csv (Midweek)
+      if: env.SCAN_TYPE == 'midweek'
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add near_breakout.csv
+        git diff --cached --quiet || git commit -m "Update near_breakout.csv from midweek scan"
+        git push
