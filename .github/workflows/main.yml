@@ -1,33 +1,52 @@
 name: Run SAT Scanner
 
+# Trigger schedule
 on:
   schedule:
-    # Daily post-market SAT scan (15:45 IST ≈ 10:15 UTC), Mon–Fri
-    - cron: '15 10 * * 1-5'
-    # Mid-week near-breakout logging (Wednesday 16:30 IST ≈ 11:00 UTC)
-    - cron: '0 11 * * 3'
-  workflow_dispatch:  # manual trigger if needed
+    # Daily run after market close (every weekday at 18:30 UTC ~ 00:00 IST)
+    - cron: '30 18 * * 1-5'
+    # Mid-week run (Wednesday 18:30 UTC ~ 00:00 IST Thursday)
+    - cron: '30 18 * * 3'
+  workflow_dispatch: # Manual trigger
 
 jobs:
-  run-script:
+  run-scanner:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      # Step 2: Setup Python
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-    - name: Install dependencies
-      run: |
-        pip install pandas requests yfinance python-telegram-bot
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pandas requests yfinance python-telegram-bot
 
-    - name: Run SAT Scanner
-      env:
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      run: |
-        python scanner.py --max-symbols 200  # scans all symbols
+      # Step 4: Determine scan type
+      - name: Set SCAN_TYPE for run
+        id: scan_type
+        run: |
+          DAY_OF_WEEK=$(date +%u)  # 1=Mon ... 7=Sun
+          if [ "$DAY_OF_WEEK" -eq 3 ]; then
+            echo "SCAN_TYPE=midweek" >> $GITHUB_ENV
+          else
+            echo "SCAN_TYPE=daily" >> $GITHUB_ENV
+          fi
+
+      # Step 5: Run scanner
+      - name: Run SAT scanner
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SCAN_TYPE: ${{ env.SCAN_TYPE }}
+        run: |
+          python scanner.py --max-symbols 200
