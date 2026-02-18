@@ -1,42 +1,45 @@
-name: Daily SAT Alert
+name: Run SAT Scanner
 
 on:
   schedule:
-    - cron: '0 0 * * 1-5'  # Runs every weekday at 00:00 UTC
-  workflow_dispatch:
+    - cron: '0 */2 * * *'   # runs every 2 hours
+  workflow_dispatch:        # allows manual trigger
 
 jobs:
   run-scanner:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # 1️⃣ Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
-        with:
-          persist-credentials: true
 
-      - name: Set up Python
+      # 2️⃣ Setup Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install pandas requests yfinance python-telegram-bot
 
-      - name: Run SAT scanner
+      # 4️⃣ Run scanner
+      - name: Run SAT Scanner
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python scanner.py
 
-      - name: Commit and push near_breakout.csv
-        if: always()
+      # 5️⃣ Commit and push near-breakout CSV
+      - name: Commit near-breakout CSV
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add near_breakout.csv
-          git commit -m "Update near_breakout.csv [skip ci]" || echo "No changes to commit"
-          git push origin main
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          if [ -f near_breakout.csv ]; then
+            git add near_breakout.csv
+            git commit -m "Update near_breakout.csv from GitHub Actions" || echo "No changes to commit"
+            git push origin main
+          fi
