@@ -19,7 +19,7 @@ from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 # CONFIG
 # ===============================
 
-CSV_PATH = r"C:\Sector Strength\nifty200.csv"
+CSV_PATH = "nifty200.csv"
 WEEKS_LOOKBACK = 20
 VOLUME_MULTIPLIER = 1.2
 ALERT_LOG_FILE = "sent_alerts.csv"
