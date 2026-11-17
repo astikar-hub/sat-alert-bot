@@ -1,7 +1,3 @@
-import os
-
-print("TOKEN:", os.getenv("TELEGRAM_TOKEN"))
-print("CHAT:", os.getenv("CHAT_ID"))
 
 
 import yfinance as yf
@@ -49,8 +45,6 @@ def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
     print("Sending Telegram message...")
-    print("URL:", url)
-    print("Payload:", payload)
     try:
         response = requests.post(url, data=payload, timeout=5)
         print("Response:", response.status_code, response.text)
