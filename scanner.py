@@ -188,6 +188,8 @@ def main():
             print(f" - {r}")
     else:
         print("No new SAT BUY signals found.\n")
+        summary = f"SAT scan done: {len(symbols)} symbols scanned, {len(results)} new breakout(s)."
+        send_telegram_message(summary)
 
 # ===============================
 # ENTRY POINT
