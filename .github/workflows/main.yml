@@ -2,10 +2,8 @@ name: Run SAT Scanner
 
 on:
   schedule:
-    # Daily scan after market close (e.g., 6:15 PM IST)
-    - cron: '45 12 * * 1-5'   # UTC time: 12:45 PM = 6:15 PM IST, Mon-Fri
-    # Mid-week scan (Wednesday)
-    - cron: '45 12 * * 3'     # UTC: Wednesday 12:45 PM = 6:15 PM IST
+    # About 6:23 PM IST (12:53 UTC) Mon-Fri; odd minute avoids busy slots
+    - cron: '53 12 * * 1-5'
   workflow_dispatch:
 
 jobs:
